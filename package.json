@@ -1,9 +1,9 @@
 {
-  "name": "boss-helper",
-  "displayName": "BossHelper",
-  "version": "0.5.0",
+  "name": "bossflow",
+  "displayName": "BossFlow",
+  "version": "1.0.0",
   "private": true,
-  "description": "Boss直聘助手, 皆在减少投递简历的麻烦, 和提高投递简历的效率,技术栈使用VIte + Vue3 + element-plus",
+  "description": "非官方社区维护的求职筛选与投递效率工具",
   "type": "module",
   "scripts": {
     "dev": "wxt",
@@ -22,10 +22,12 @@
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "lint": "oxlint --type-aware",
-    "lint:fix": "oxlint --type-aware --fix"
+    "lint:fix": "oxlint --type-aware --fix",
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^4.0.16",
+    "@ai-sdk/provider": "^4.0.18",
     "@nuxt/ui": "^4.10.0",
     "@vueuse/integrations": "^14.2.1",
     "ai": "^7.0.31",
@@ -58,7 +60,7 @@
     "protobufjs": "^8.6.3",
     "sass": "^1.99.0",
     "ts-proto": "^2.11.6",
-    "typescript": "^7.0.2",
+    "typescript": "~5.9.3",
     "uid": "^2.0.2",
     "vite-plugin-tailwind-shadowdom": "^1.1.1",
     "vue-tsc": "^3.2.6",
@@ -70,5 +72,10 @@
   "lint-staged": {
     "*": "oxfmt --no-error-on-unmatched-pattern",
     "*.{js,jsx,ts,tsx,mjs,cjs}": "oxlint --fix"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "vue-demi"
+    ]
   }
 }

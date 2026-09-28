@@ -4,6 +4,7 @@
     "jsx": "preserve",
     "jsxImportSource": "vue",
     "allowArbitraryExtensions": true,
+    "allowImportingTsExtensions": true,
     "paths": {
       "@": ["./src"],
       "@/*": ["./src/*"],

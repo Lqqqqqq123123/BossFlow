@@ -18,7 +18,7 @@ const confs = {
 const overlay = useOverlay()
 
 const dropdownItems = computed(() => [
-  [{ label: 'BossHelp配置项' }],
+  [{ label: 'BossFlow' }],
   Object.entries(confs).map(([_, v]) => ({
     label: v.name,
     disabled: v.disabled,
@@ -42,9 +42,9 @@ function onProtocol() {
 }
 
 onMounted(async () => {
-  logger.info('BossHelper挂载成功')
+  logger.info('BossFlow 挂载成功')
   toast.add({
-    description: 'BossHelper挂载成功!',
+    description: 'BossFlow 已就绪',
     duration: 2000,
   })
 
@@ -59,11 +59,13 @@ const container = ref<HTMLDivElement>()
   <div ref="container" class="fixed top-18 right-10 z-999">
     <UApp :portal="container" :toaster="{ position: 'top-right', ui: { viewport: 'z-100000' } }">
       <UDropdownMenu :items="dropdownItems">
-        <UAvatar
+        <UButton
+          square
           size="xs"
-          src="https://avatars.githubusercontent.com/u/68412205?v=4"
-          alt="H"
-          class="border-2 border-amber-50 hover:border-amber-200 cursor-pointer"
+          color="neutral"
+          variant="subtle"
+          icon="i-lucide-panel-top-open"
+          aria-label="打开 BossFlow 菜单"
         />
       </UDropdownMenu>
       <UModal v-model:open="protocolShow">
@@ -93,10 +95,10 @@ const container = ref<HTMLDivElement>()
           <br />
           使用该脚本有一定风险(如黑号,封号,权重降低等)，本项目不承担任何责任
           <br />
-          Github开源地址:
+          社区维护仓库:
 
-          <ULink to="https://github.com/ocyss/boss-helper" target="_blank"
-            >https://github.com/ocyss/boss-helper
+          <ULink to="https://github.com/Lqqqqqq123123/BossFlow" target="_blank"
+            >https://github.com/Lqqqqqq123123/BossFlow
           </ULink>
         </template>
         <template #footer>

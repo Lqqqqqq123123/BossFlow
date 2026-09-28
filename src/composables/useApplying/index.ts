@@ -1,4 +1,4 @@
-import { shallowRef, ref } from 'vue'
+import { reactive, shallowRef, ref } from 'vue'
 
 import { PipelineCacheManager } from '@/composables/usePipelineCache'
 import type { PipelineCacheItem, ProcessorType } from '@/types/pipelineCache'
@@ -14,6 +14,7 @@ import {
   TaskPipeline,
   TaskResult,
   TaskStatus,
+  TaskTrace,
   WorkflowData,
 } from './type'
 
@@ -107,7 +108,12 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     }>
   >([])
   const stateMaps = ref(new Map<string, any>())
+  const timeline = reactive(new Map<string, TaskTrace[]>())
   const resolvedHandlers = new Map<string, Handler<C, T, S>>()
+
+  const addTrace = (jobKey: string, trace: Omit<TaskTrace, 'timestamp'>) => {
+    timeline.set(jobKey, [...(timeline.get(jobKey) ?? []), { ...trace, timestamp: Date.now() }])
+  }
 
   const rebuild = async () => {
     const _ctx: TaskContext<C, T, S> = { helper, now: new Date() }
@@ -227,14 +233,26 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     return res
   }
 
-  const execute = async (data: WorkflowData<T, S>) => {
+  const execute = async (data: WorkflowData<T, S>, startTaskId?: string) => {
     const isStop = () => status.value === 'stop'
     try {
       let skipPipeline = false
-      for (const t of pipeline.value) {
+      const startIndex = startTaskId
+        ? Math.max(
+            pipeline.value.findIndex((task) => task.id === startTaskId),
+            0,
+          )
+        : 0
+      for (const t of pipeline.value.slice(startIndex)) {
         let res: void | TaskResult = undefined
         try {
           if (isStop()) break
+          addTrace(data.jobData.key, {
+            taskId: t.id,
+            label: t.label ?? t.id,
+            status: 'running',
+            message: t.stateMsg ?? '运行中',
+          })
           helper.jobResultMaps.set(data.jobData.key, {
             status: t.state || 'running',
             msg: t.stateMsg || '运行中',
@@ -260,6 +278,21 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           skipPipeline = true
           break
         } finally {
+          if (res != null) {
+            addTrace(data.jobData.key, {
+              taskId: t.id,
+              label: t.label ?? t.id,
+              status: res.status === 'error' ? 'error' : res.isSkip ? 'filtered' : 'success',
+              message: res.reason ?? res.msg ?? t.label ?? t.id,
+            })
+          } else if (!isStop()) {
+            addTrace(data.jobData.key, {
+              taskId: t.id,
+              label: t.label ?? t.id,
+              status: 'success',
+              message: '完成',
+            })
+          }
           if (res != null) {
             helper.jobResultMaps.set(data.jobData.key, {
               ...(helper.jobResultMaps.get(data.jobData.key) ?? {}),
@@ -367,6 +400,26 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     })
   }
 
+  const retry = async (jobKey: string) => {
+    if (status.value === 'running') return false
+    const data = helper.jobMaps.get(jobKey)
+    if (!data) return false
+
+    await rebuild()
+    const failedTaskId = timeline.get(jobKey)?.findLast((trace) => trace.status === 'error')?.taskId
+
+    status.value = 'running'
+    current.value = Math.max(helper.jobList.value.findIndex((job) => job.key === jobKey) + 1, 1)
+    helper.currentJob.value = jobKey
+    helper.jobResultMaps.set(jobKey, { status: 'wait', msg: '准备重试' })
+    try {
+      await execute(data, failedTaskId)
+      return helper.jobResultMaps.get(jobKey)?.status !== 'error'
+    } finally {
+      status.value = 'pending'
+    }
+  }
+
   return {
     items,
     status,
@@ -377,10 +430,12 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     nodes,
     ctx: helper,
     stateMaps,
+    timeline,
     rebuild,
     execute,
     executeAll,
     stop,
     reset,
+    retry,
   }
 }

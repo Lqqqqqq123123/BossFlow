@@ -1,12 +1,11 @@
 <script lang="ts" setup>
-import { TabsItem } from '@nuxt/ui'
+import type { TabsItem } from '@nuxt/ui'
 import { useRafFn } from '@vueuse/core'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 
 import ChatBox from '@/components/ChatBox.vue'
 import JobCards from '@/components/JobCards.vue'
 import Version from '@/components/Menu/Version.vue'
-import About from '@/components/Tabs/About.vue'
 import Ai from '@/components/Tabs/AI.vue'
 import Config from '@/components/Tabs/Config.vue'
 import Filter from '@/components/Tabs/Filter.vue'
@@ -24,12 +23,11 @@ const { todayData } = helper.statistics
 
 const items = computed<TabsItem[]>(() => {
   const configs = [
-    { slot: 'statistics', label: '统计', help: '失败是成功她妈' },
-    { slot: 'filter', label: '筛选' },
-    { slot: 'config', label: '配置', help: '好好看，好好学' },
-    { slot: 'ai', label: 'AI', help: 'AI时代，脚本怎么能落伍!' },
-    { slot: 'logs', label: '日志', help: '反正你也不看' },
-    { slot: 'about', label: '关于&赞赏', help: '项目是写不完美的,但总要去追求完美' },
+    { slot: 'statistics', label: '投递', icon: 'i-lucide-gauge' },
+    { slot: 'filter', label: '筛选', icon: 'i-lucide-list-filter' },
+    { slot: 'config', label: '配置', icon: 'i-lucide-settings-2' },
+    { slot: 'ai', label: 'AI', icon: 'i-lucide-sparkles' },
+    { slot: 'logs', label: '日志', icon: 'i-lucide-scroll-text' },
   ] satisfies (TabsItem | boolean | null | undefined | '')[]
 
   return configs.filter((item) => !!item) as TabsItem[]
@@ -125,6 +123,20 @@ const isDot = computed(() => {
   return (helper.netConf.value?.version ?? '0') > VITE_VERSION
 })
 
+const workflowState = computed(() => {
+  const state = helper.workflow?.status.value ?? 'pending'
+  if (state === 'running') {
+    return { label: '投递中', color: 'success' as const, icon: 'i-lucide-loader-circle' }
+  }
+  if (state === 'stop') {
+    return { label: '已暂停', color: 'warning' as const, icon: 'i-lucide-pause' }
+  }
+  if (state === 'error') {
+    return { label: '异常', color: 'error' as const, icon: 'i-lucide-circle-alert' }
+  }
+  return { label: '待命', color: 'neutral' as const, icon: 'i-lucide-circle-dot' }
+})
+
 const overlay = useOverlay()
 
 function openStore() {
@@ -146,7 +158,7 @@ function onPointerMove(ev: PointerEvent) {
 
 <template>
   <div
-    class="shadow-wrapper w-284 max-w-284 min-w-284 m-10 mx-auto mb-24"
+    class="shadow-wrapper my-8 mx-auto w-[min(1120px,calc(100vw-32px))] min-w-0 max-w-[1120px]"
     :style="{
       marginRight:
         appearanceConf.leftChat && appearanceConf.contentOffset != 25
@@ -181,25 +193,96 @@ function onPointerMove(ev: PointerEvent) {
         @mouseenter="isHovering = true"
         @mouseleave="isHovering = false"
       >
-        <div class="rounded-xl pt-3 pb-6 px-4 bg-default flex flex-col">
-          <div class="flex gap-2 items-center">
-            <span class="text-xl">{{ !appearanceConf.hideHeader ? 'Boss-Helper' : 'Helper' }}</span>
-            <UChip :show="isDot">
-              <UButton color="primary" variant="subtle" @click="openStore" size="xs">
-                v{{ VITE_VERSION }} {{ isDot ? ' 有更新' : '' }}
-              </UButton>
-            </UChip>
-            <span v-if="todayData.total > 0" style="margin-right: 15px">
-              今日投递: {{ todayData.success }}/{{ conf.formData.deliveryLimit.value }}
-            </span>
-            <span v-if="helper.workflow && helper.workflow.total.value > 0">
-              当前页面处理: {{ helper.workflow.current.value + 1 }}/{{
-                helper.workflow.total.value
-              }}
-            </span>
-          </div>
+        <section class="overflow-hidden rounded-lg border border-default bg-default shadow-sm">
+          <header
+            class="flex min-h-18 flex-wrap items-center justify-between gap-3 border-b border-muted px-5 py-3"
+          >
+            <div class="flex min-w-0 items-center gap-3">
+              <div
+                class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary"
+              >
+                <UIcon name="i-lucide-briefcase-business" class="size-5" />
+              </div>
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h1 class="truncate text-base font-semibold text-highlighted">
+                    {{ !appearanceConf.hideHeader ? 'BossFlow' : 'BF' }}
+                  </h1>
+                  <UBadge
+                    :color="workflowState.color"
+                    variant="subtle"
+                    size="sm"
+                    :icon="workflowState.icon"
+                    :class="
+                      workflowState.color === 'success'
+                        ? '[&_[data-slot=leadingIcon]]:animate-spin'
+                        : ''
+                    "
+                  >
+                    {{ workflowState.label }}
+                  </UBadge>
+                </div>
+                <p class="mt-0.5 truncate text-xs text-muted">
+                  今日投递 {{ todayData.success }} / {{ conf.formData.deliveryLimit.value }}
+                  <span v-if="helper.workflow && helper.workflow.total.value > 0">
+                    · 当前页面 {{ helper.workflow.current.value }}/{{ helper.workflow.total.value }}
+                  </span>
+                </p>
+              </div>
+            </div>
 
-          <div v-if="helper.netConf.value && helper.netConf.value.notification" class="netAlerts">
+            <div class="flex items-center gap-1.5">
+              <UChip :show="isDot">
+                <UButton
+                  color="neutral"
+                  variant="ghost"
+                  size="sm"
+                  icon="i-lucide-package-check"
+                  :label="`v${VITE_VERSION}`"
+                  title="版本信息"
+                  @click="openStore"
+                />
+              </UChip>
+              <UTooltip text="对话助手">
+                <UButton
+                  square
+                  size="sm"
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-message-square-text"
+                  aria-label="打开对话助手"
+                  @click="chatOpen = !chatOpen"
+                />
+              </UTooltip>
+              <UTooltip v-if="helper.netConf.value?.feedback" text="提交反馈">
+                <UButton
+                  square
+                  size="sm"
+                  color="neutral"
+                  variant="ghost"
+                  icon="i-lucide-message-circle-warning"
+                  aria-label="提交反馈"
+                  @click="tagOpen(helper.netConf.value.feedback)"
+                />
+              </UTooltip>
+              <UTooltip text="帮助模式">
+                <UButton
+                  square
+                  size="sm"
+                  :color="isFeatureEnabled ? 'primary' : 'neutral'"
+                  :variant="isFeatureEnabled ? 'soft' : 'ghost'"
+                  icon="i-lucide-circle-help"
+                  aria-label="切换帮助模式"
+                  @click="isFeatureEnabled = !isFeatureEnabled"
+                />
+              </UTooltip>
+            </div>
+          </header>
+
+          <div
+            v-if="helper.netConf.value && helper.netConf.value.notification"
+            class="netAlerts px-5 pt-3"
+          >
             <template
               v-for="item in helper.netConf.value.notification.filter(
                 (item) => item.type === 'alert',
@@ -213,7 +296,13 @@ function onPointerMove(ev: PointerEvent) {
             data-help="no-help"
             :items="items"
             variant="link"
-            :ui="{ list: 'items-center' }"
+            size="md"
+            class="gap-0"
+            :ui="{
+              list: 'items-center px-4 overflow-x-auto',
+              trigger: 'min-w-fit',
+              content: 'px-5 py-4',
+            }"
             :unmount-on-hide="false"
           >
             <template #statistics>
@@ -225,39 +314,8 @@ function onPointerMove(ev: PointerEvent) {
             <template #config><Config /></template>
             <template #ai><Ai /></template>
             <template #logs><Logs /></template>
-            <template #about><About /></template>
-            <template #list-trailing>
-              <UButton
-                class="ml-2"
-                size="xs"
-                color="primary"
-                @click.stop="
-                  () => {
-                    chatOpen = !chatOpen
-                  }
-                "
-              >
-                对话
-              </UButton>
-              <UButton
-                v-if="helper.netConf.value?.feedback"
-                class="ml-2"
-                size="xs"
-                color="info"
-                @click.stop="tagOpen(helper.netConf.value.feedback)"
-              >
-                反馈
-              </UButton>
-              <UCheckbox
-                class="ml-2"
-                size="md"
-                color="neutral"
-                v-model="isFeatureEnabled"
-                label="帮助"
-              />
-            </template>
           </UTabs>
-        </div>
+        </section>
       </div>
       <JobCards />
       <ChatBox v-model:open="chatOpen" />

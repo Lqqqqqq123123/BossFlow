@@ -9,6 +9,7 @@ import { ProvideContentAdapter } from './contentScriptShare'
 
 export const [, injectCounter] = defineProxy(() => ({}) as ContentCounter, {
   namespace: '__boss-helper-content__',
+  heartbeatCheck: false,
 })
 
 // export default class InjectAdapter implements Adapter {

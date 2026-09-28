@@ -6,6 +6,7 @@ import type { Statistics } from '@/types/formData'
 import { getCurDay } from '@/utils'
 import deepmerge, { jsonClone } from '@/utils/deepmerge'
 import { logger } from '@/utils/logger'
+import { recordStatisticsProcessed, recordStatisticsTask } from '@/utils/statisticsRecord'
 
 export const todayKey = 'local:web-geek-job-Today'
 export const statisticsKey = 'local:web-geek-job-Statistics'
@@ -28,25 +29,11 @@ export const useStatistics = () => {
   const statisticsData = ref<Statistics[]>([])
 
   function recordTaskResult(taskId: string, result: { isSkip?: boolean; status?: string }) {
-    if (result.status) {
-      todayData.tasks[taskId] ??= {}
-      todayData.tasks[taskId][result.status] ??= 0
-      todayData.tasks[taskId][result.status] += 1
-    }
-
-    if (taskId === '岗位投递' && result.status === 'success') {
-      todayData.success += 1
-    }
-    if (result.isSkip && (taskId === '已沟通' || taskId.startsWith('重复沟通-'))) {
-      todayData.repeat += 1
-    }
-    if (result.isSkip && taskId === '活跃度过滤') {
-      todayData.activityFilter += 1
-    }
+    recordStatisticsTask(todayData, taskId, result)
   }
 
   function recordProcessed() {
-    todayData.total += 1
+    recordStatisticsProcessed(todayData)
   }
 
   async function getStatistics(): Promise<string> {

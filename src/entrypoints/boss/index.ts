@@ -11,6 +11,7 @@ import { counter } from '@/message'
 import { FormDataInput } from '@/types/formData'
 import elmGetter from '@/utils/elmGetter'
 import { logger } from '@/utils/logger'
+import { createClientMidFactory, normalizeGreetingMessages } from '@/utils/messageSequence'
 
 import { GeekChatClientManager } from './chat'
 import { BoosJobData, bossWorkflow } from './delivery'
@@ -220,15 +221,13 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
       friendSource: data.rawData.detail.bossInfo.bossSource ?? 0,
       encryptUid: data.rawData.jobitem.encryptBossId,
       encryptGid: '',
-      clientMid: Date.now(),
+      clientMid: 0,
     }
-    if (typeof msgs === 'string') {
-      msgs = [{ type: 'text', content: msgs }]
-    }
-    for (const msg of msgs) {
+    const nextClientMid = createClientMidFactory()
+    for (const msg of normalizeGreetingMessages(msgs)) {
       var m
       // Each chat message needs its own client id; reusing one makes later messages look duplicated.
-      stanza.clientMid = Date.now()
+      stanza.clientMid = nextClientMid()
       if (msg.type === 'image') {
         const response = await counter.getImage(msg.image)
         if (!response.success) {

@@ -9,6 +9,7 @@ export { ProvideContentAdapter } from './contentScriptShare'
 
 export const [, injectBackgroundCounter] = defineProxy(() => ({}) as BackgroundCounter, {
   namespace: '__boss-helper-background__',
+  heartbeatCheck: false,
 })
 
 function genKey(key: string): StorageItemKey {

@@ -1,8 +1,8 @@
 {
   "extName": {
-    "message": "boss-helper"
+    "message": "BossFlow"
   },
   "extDescription": {
-    "message": "BOSS Direct Assistant, Supports rich filtering rules and AI integration, enabling both screening and automatic greetings."
+    "message": "An unofficial community-maintained job filtering and application productivity extension."
   }
 }

@@ -58,6 +58,14 @@ export type TaskResult = {
   isCache?: boolean
 }
 
+export type TaskTrace = {
+  taskId: string
+  label: string
+  status: 'running' | 'success' | 'filtered' | 'error'
+  message: string
+  timestamp: number
+}
+
 export type Handler<C extends HelperContext<C, T, S>, T, S> = (
   ctx: TaskContext<C, T, S>,
   data: WorkflowData<T, S>,

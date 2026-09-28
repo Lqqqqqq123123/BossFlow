@@ -15,13 +15,16 @@ const storageKey = computed(() => `local:alert:${props.id}`)
 const isVisible = ref(true)
 
 onMounted(async () => {
+  if (!props.id) return
   const shouldHide = await counter.storageGet(storageKey.value, false)
   isVisible.value = !shouldHide
 })
 
 const handleClose = async () => {
-  await counter.storageSet(storageKey.value, true)
   isVisible.value = false
+  if (props.id) {
+    await counter.storageSet(storageKey.value, true)
+  }
 }
 
 const icon = computed(() => {
@@ -44,8 +47,8 @@ const icon = computed(() => {
   <UAlert
     v-if="isVisible"
     v-bind="props"
-    @close="handleClose"
-    :close="props.close ? props.close : props.id ? true : undefined"
+    @update:open="(open) => !open && handleClose()"
+    :close="props.close === false ? false : (props.close ?? true)"
     :icon="icon"
     :color="props.color ?? 'info'"
     :variant="props.variant ?? 'subtle'"

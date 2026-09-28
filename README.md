@@ -1,102 +1,82 @@
-> [!CAUTION]
-> 本项目仅供学习交流，禁止用于商业用途
->
-> 使用该脚本有一定风险(如黑号,封号,权重降低等)，本项目不承担任何责任
+# BossFlow
 
-| Chrome                                                                                                                                                                                             | Crx搜搜                                                                                                                                           | Edge                                                                                                                                                                                                                                                                                                                           | FireFox                                                                                                                                   | Github                                                                                                                                |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/ogkmgjbagackkdlcibcailacnncgonbn?label=Chrome插件商店)](https://chrome.google.com/webstore/detail/ogkmgjbagackkdlcibcailacnncgonbn) | [![Crx 搜搜](https://img.shields.io/badge/Crx搜索-v%3F.%3F.%3F-EF7C3D)](https://www.crxsoso.com/webstore/detail/ogkmgjbagackkdlcibcailacnncgonbn) | [![Edge Web Store](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fmicrosoftedge.microsoft.com%2Faddons%2Fgetproductdetailsbycrxid%2Fjcllnbjfeamhihjpfjlclhdnjmggbgal&query=version&prefix=v&label=Edge插件商店&color=EF7C3D)](https://microsoftedge.microsoft.com/addons/detail/jcllnbjfeamhihjpfjlclhdnjmggbgal) | [![Firefox](https://img.shields.io/amo/v/boss-helper?label=Mozilla插件商店)](https://addons.mozilla.org/zh-TW/firefox/addon/boss-helper/) | [![GitHub Release](https://img.shields.io/github/v/release/Ocyss/boss-helper)](https://github.com/Ocyss/boss-helper/releases/latest/) |
+BossFlow 是一个面向求职流程的浏览器扩展，提供岗位筛选、自动投递、投递统计、AI 辅助和自定义招呼语等能力。
 
-> **国内**: 如果无法访问 `Chrome插件商店` , 请使用 `Crx搜搜` 或 `Edge插件商店` 安装
+本项目是 [Ocyss/boss-helper](https://github.com/Ocyss/boss-helper) 的非官方社区维护 Fork，与 BOSS 直聘官方无关。
 
-## 项目介绍
+## 项目状态
 
-Boss直聘助手, 皆在减少投递简历的麻烦, 和提高投递简历的效率, 技术栈使用WXT + Vue3 + NuxtUI@4 + TailwindCSS@4, 开源在 Github 欢迎前来Pr
+- 当前社区版本：`1.0.0`
+- 社区仓库：<https://github.com/Lqqqqqq123123/BossFlow>
+- 问题反馈：<https://github.com/Lqqqqqq123123/BossFlow/issues>
+- 上游项目：<https://github.com/Ocyss/boss-helper>
+- 构建目标：Chrome、Edge、Firefox
 
-> 本项目处于积极维护状态, 一直很忙所以拖了比较久才开源，抱歉了~
+> [!WARNING]
+> 自动化操作可能触发平台风控，包括限制功能、降低账号权重或封禁账号。请合理设置投递频率和数量，使用者自行承担相关风险。
 
-## 相关链接
+## 主要能力
 
-唯一交流群:
-微信麻烦, 飞书人数限制, 所以只开tg一个~
+- 按岗位名称、公司、薪资、活跃度、地址等条件筛选岗位。
+- 自动投递并展示今日处理、成功、过滤和重复数据。
+- 支持自定义文本、图片招呼语及 AI 辅助筛选和招呼语。
+- 支持配置预设、JSON 导入与导出。
+- 展示岗位执行状态、任务时间线，并支持失败岗位重试。
+- 配置数据、API Key 等敏感信息默认保存在浏览器扩展本地存储中。
 
-<img alt="交流群" src="./docs/img/tg.png" height="200" />
+## 安装与构建
 
-Github开源地址: <https://github.com/ocyss/boss-helper>
+需要 Node.js 22 或更高版本，以及 pnpm。
 
-飞书反馈问卷(匿名): <https://gai06vrtbc0.feishu.cn/share/base/form/shrcnmEq2fxH9hM44hqEnoeaj8g>
+```powershell
+pnpm install
+pnpm build
+```
 
-> 每个提交都会给我发通知，我看见就会评论的形式回复 一般 1-2天
+构建产物位于：
 
-飞书问卷结果: <https://gai06vrtbc0.feishu.cn/share/base/view/shrcnrg8D0cbLQc89d7Jj7AZgMc>
+```text
+.output/chrome-mv3
+.output/edge-mv3
+.output/firefox-mv2
+```
 
-greasyfork地址(0.2旧版本): <https://greasyfork.org/zh-CN/scripts/491340>
+开发和质量检查：
 
-## 项目预览
+```powershell
+pnpm dev
+pnpm check
+pnpm lint
+pnpm test
+```
 
-[![卡片状态](docs/img/shot_2024-04-14_23-08-03.png)](docs/img/shot_2024-04-14_23-08-03.png)
-[![账户配置](docs/img/shot_2024-04-14_23-09-05.png)](docs/img/shot_2024-04-14_23-09-05.png)
-[![统计界面](docs/img/shot_2024-04-02_22-25-25.png)](docs/img/shot_2024-04-02_22-25-25.png)
-[![配置界面](docs/img/shot_2024-04-02_22-26-54.png)](docs/img/shot_2024-04-02_22-26-54.png)
-[![日志界面](docs/img/shot_2024-04-02_22-32-25.png)](docs/img/shot_2024-04-02_22-32-25.png)
+## 使用说明
 
-## TODO
+1. 在 BOSS 直聘岗位列表页加载扩展。
+2. 在“配置”页设置筛选条件、投递上限和招呼语，并保存配置。
+3. 回到“投递”页开始任务，观察岗位队列和执行状态。
+4. 导入配置后需要手动点击“保存配置”。配置文件可能包含隐私信息，请勿公开分享未经检查的文件。
 
-- [x] 优化UI去除广告
-- [x] 批量投递简历
-- 高级筛选
-  - [x] 薪资,公司名,工作名,人数,内容简单筛选
-  - 公司地址相关
-    > 使用高德api，需要自行申请，或者使用关键字筛选, 暂时只有驾车和步行
-    - [x] 驾车/步行距离
-    - [x] 驾车/步行时间
-  - [ ] 公司风险评控
-  - [x] AI筛选
-- 自动打招呼
-  - [x] 模板语言
-  - [x] 支持chatGPT
-- AI赋能
-  - [ ] 自动回复聊天
-  - [x] 多模型管理
-- 额外功能(有时间会写)
-  - [x] 自适应UI适配手机
-  - [ ] 黑名单
-  - [x] 多账号管理 (废弃, 改为多配置切换)
-  - [ ] 聊天阻止发送已读
-  - [ ] boss消息弹窗
+## 社区维护说明
 
-## 参与贡献
+- 社区版本保留上游完整 Git 历史、MIT License 和原作者版权声明。
+- Fork 标识是 GitHub 正常展示上游关系的方式，不影响独立维护和发布。
+- 上游作者不负责社区版本的功能、发布、支持或安全问题，请在社区仓库反馈。
+- 独立商店身份完成前，仅以 GitHub Release 作为社区版发布入口。
 
-1. Fork 本仓库并克隆到本地。
-2. 在新分支上进行您的更改：`git checkout -b 您的分支名称`
-3. 提交更改：`git commit -am '描述您的更改'`
-4. 推送更改到您的 Fork：`git push origin 您的分支名称`
-5. 提交 Pull 请求。
+## 许可与使用口径
 
-## 鸣谢
+代码仓库保留上游的 [MIT License](./LICENSE)，包括原作者版权声明。MIT License 允许复制、修改、分发和商业使用，但必须保留许可与版权声明。
 
-- <https://github.com/yangfeng20/boss_batch_push>
-- <https://github.com/lisonge/vite-plugin-monkey>
-- <https://github.com/chatanywhere/GPT_API_free>
+上游 README 曾同时声明“禁止商业用途”，该表述与 MIT License 的商业使用授权存在冲突。社区版本当前按免费、非商业、学习交流用途维护；在完成正式法律口径确认前，不额外收窄或改写 MIT License 的授权内容。
 
-- <https://uiverse.io/>
-- <https://www.runoob.com/manual/mqtt/protocol/MQTT-3.1.1-CN.pdf>
+## 贡献
 
-## 类似项目
+1. 从社区仓库创建分支。
+2. 完成修改并运行 `pnpm check`、`pnpm lint`、`pnpm test` 和 `pnpm build`。
+3. Git 提交说明使用中文，可以保留 `fix:`、`feat:`、`docs:` 等类型前缀。
+4. 向社区仓库提交 Pull Request。
 
-- <https://github.com/Frrrrrrrrank/auto_job__find__chatgpt__rpa>
-- <https://github.com/noBaldAaa/find-job>
+## 致谢
 
-## 最后
-
-嗯...
-
-## Star 趋势
-
-<a href="https://star-history.com/#ocyss/boss-helper&Date">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=ocyss/boss-helper&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=ocyss/boss-helper&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=ocyss/boss-helper&type=Date" />
- </picture>
-</a>
+感谢 [Ocyss/boss-helper](https://github.com/Ocyss/boss-helper) 原作者及所有历史贡献者。社区维护不会删除或替换原作者版权和贡献记录。

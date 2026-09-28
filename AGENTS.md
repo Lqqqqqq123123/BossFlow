@@ -1,11 +1,11 @@
-# boss-helper-community 维护约定
+# BossFlow 维护约定
 
 ## 项目定位
 
 - 本仓库是 `Ocyss/boss-helper` 的非官方社区维护 Fork，与 BOSS 直聘官方无关。
-- 社区仓库地址应为 `https://github.com/Lqqqqqq123123/boss-helper.git`。
+- 社区仓库地址应为 `https://github.com/Lqqqqqq123123/BossFlow.git`。
 - 上游仓库地址应为 `https://github.com/Ocyss/boss-helper.git`。
-- 对外名称逐步统一为 `boss-helper-community`；改名时同步检查包名、扩展展示名、文档、链接、构建产物和发布配置。
+- 对外名称统一为 `BossFlow`，包名为 `bossflow`；同步检查扩展展示名、文档、链接、构建产物和发布配置。
 
 ## 版权与许可
 
@@ -21,6 +21,7 @@
 - 预期 `origin` 指向社区 Fork，`upstream` 指向原项目。发现缺失或不一致时先报告；未经明确要求不要修改 remote。
 - 不得删除、覆盖或回退用户已有改动。不要使用 `git reset --hard`、`git clean -fd`、强制推送或其他会丢失历史/文件的命令。
 - 不得未经确认提交、推送、合并、关闭 PR、创建 Release 或发布扩展。
+- 后续 Git 提交标题和说明统一使用中文；可以保留 `fix:`、`feat:`、`docs:` 等 Conventional Commits 类型前缀，但冒号后的描述必须使用中文。
 - 与上游同步时保留可审计的提交关系；执行 rebase、历史重写或处理复杂冲突前必须先获得确认。
 
 ## 当前已完成且应防止回归的修复
@@ -32,6 +33,9 @@
 - 修复自定义招呼语“文本 + 图片”只能发送第一条的问题：每条消息必须使用独立 `clientMid`。
 - 自定义招呼语的文本和图片连续发送已经过实际验证；修改消息发送链路时必须保留该行为并补充自动化测试。
 - 修复自动投递统计不显示/不正确的问题：所有界面必须读取 `HelperContext.statistics` 的同一状态实例；每个实际处理的岗位累计一次 `total`，只有“岗位投递”任务成功才累计 `success`。
+- 配置页必须保留 JSON 导入和导出入口；导入后由用户确认并手动保存。
+- 岗位队列支持成功、失败、过滤状态筛选；失败重试应从最近失败任务继续，避免重复执行已经成功的岗位投递任务。
+- 工作流任务状态应同步记录到岗位执行时间线。
 
 ## 验证基线
 
@@ -55,24 +59,21 @@ pnpm build:chrome
 pnpm build:firefox
 pnpm build:edge
 
-# 类型检查和 lint
+# 类型检查、lint 和测试
 pnpm check
 pnpm lint
+pnpm test
 ```
 
 - 构建输出目录为 `.output/<browser>-mv<manifest-version>`。
-- 当前仓库仍需解决 pnpm 11 的依赖构建脚本审批以及 `vue-tsc`/TypeScript 版本兼容问题；遇到失败必须报告实际错误，不得绕过后宣称对应命令已通过。
+- pnpm 11 仅允许 `vue-demi` 执行依赖构建脚本；不得改成全局允许。
+- `vue-tsc` 当前使用 TypeScript 5.9 系列，升级 TypeScript 前必须先验证兼容性。
 
 ## 当前维护待办
 
-1. 正式将项目改名为 `boss-helper-community`，并同步所有用户可见和发布相关标识。
-2. 更新 README：说明上游来源、MIT License、原作者版权、社区维护者信息、非官方身份及与 BOSS 直聘官方无关。
-3. 修复 GitHub Actions：移除不存在的 `build:noTsc`，将 `dist` 产物路径改为 WXT 的 `.output`，并建立可复现的包管理器/锁文件策略。
-4. 修复 `vue-tsc` 与 TypeScript 的版本兼容问题。
-5. 处理 `SalaryRange` 组件自动导入命名冲突。
-6. 调查构建期间 linkedom 对只读 `Event.eventPhase` 赋值的异常。
-7. 增加消息发送相关自动化测试，重点防止复用 `clientMid` 的回归。
-8. 独立发布前更换 Chrome 扩展 `key`、Firefox 扩展 ID、商店链接、反馈地址、Release 地址及所有原作者发布身份；完成替换前不得以社区版本名义发布。
+1. 修复 GitHub Actions：移除不存在的 `build:noTsc`，将 `dist` 产物路径改为 WXT 的 `.output`，并建立可复现的包管理器/锁文件策略。
+2. 独立发布前更换 Chrome 扩展 `key`、Firefox 扩展 ID 及商店身份；完成替换前不得发布到浏览器商店。
+3. 继续收敛现有 lint 警告，并为失败重试和任务时间线补充更完整的工作流集成测试。
 
 ## 变更原则
 

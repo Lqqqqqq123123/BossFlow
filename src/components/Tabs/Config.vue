@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { computed, ref } from 'vue'
+
 import Alert from '@/components/Alert.vue'
 import { formInfoData, useConf } from '@/composables/conf'
 import { getCacheManager } from '@/composables/useApplying'
@@ -9,6 +11,15 @@ import ConfigItem from './ConfigItem/ConfigItem.vue'
 const helper = useHelper()
 const conf = useConf()
 const configItems = helper.getConfigItems()
+const configView = ref<'basic' | 'advanced'>('basic')
+
+const visibleConfigItems = computed(() => {
+  const items = configItems.value[1].filter((item) => !!item)
+  return items.filter((item) => {
+    const isAdvanced = item.value === 'address' || item.value === 'delay'
+    return configView.value === 'advanced' ? isAdvanced : !isAdvanced
+  })
+})
 </script>
 
 <template>
@@ -30,12 +41,45 @@ const configItems = helper.getConfigItems()
         },
       }"
     >
+      <div
+        class="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-muted bg-elevated/40 p-3"
+      >
+        <UTabs
+          v-model="configView"
+          :items="[
+            { label: '基础设置', value: 'basic', icon: 'i-lucide-sliders-horizontal' },
+            { label: '高级设置', value: 'advanced', icon: 'i-lucide-settings-2' },
+          ]"
+          size="sm"
+          :content="false"
+        />
+        <div class="flex items-center gap-2">
+          <UButton
+            color="neutral"
+            variant="outline"
+            size="sm"
+            icon="i-lucide-download"
+            label="导出配置"
+            data-help="将当前预设导出为 JSON 文件"
+            @click="conf.confExport"
+          />
+          <UButton
+            color="primary"
+            variant="soft"
+            size="sm"
+            icon="i-lucide-upload"
+            label="导入配置"
+            data-help="从 JSON 文件导入配置，导入后请手动保存"
+            @click="conf.confImport"
+          />
+        </div>
+      </div>
       <Alert v-for="(items, index) in configItems[0]" :key="index" v-bind="items" />
       <UForm :disabled="helper.workflowRunning.value || conf.isLoading.value">
         <UAccordion
           type="single"
           collapsible
-          :items="configItems[1].filter((item) => !!item)"
+          :items="visibleConfigItems"
           :ui="{ content: 'data-[state=open]:pt-1 data-[state=open]:pb-3 px-2 gap-3' }"
           :unmount-on-hide="false"
           default-value="filter"
@@ -114,22 +158,6 @@ const configItems = helper.getConfigItems()
               @create="conf.createPreset"
             />
           </UFormField>
-          <UButton
-            v-if="conf.configLevel.intermediate"
-            color="primary"
-            data-help="互联网就是要分享"
-            @click="conf.confExport"
-          >
-            导出配置
-          </UButton>
-          <UButton
-            v-if="conf.configLevel.intermediate"
-            color="primary"
-            data-help="互联网就是要分享"
-            @click="conf.confImport"
-          >
-            导入配置
-          </UButton>
           <UButton
             v-if="conf.configLevel.advanced"
             color="error"
