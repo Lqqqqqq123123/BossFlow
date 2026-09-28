@@ -265,11 +265,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
               ...(helper.jobResultMaps.get(data.jobData.key) ?? {}),
               ...res,
             })
-            if (res.status) {
-              helper.statistics.todayData.tasks[t.id] ??= {}
-              helper.statistics.todayData.tasks[t.id][res.status] ??= 0
-              helper.statistics.todayData.tasks[t.id][res.status] += 1
-            }
+            helper.statistics.recordTaskResult(t.id, res)
           }
         }
       }
@@ -282,6 +278,8 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     } catch (e) {
       status.value = 'error'
       throw e
+    } finally {
+      helper.statistics.recordProcessed()
     }
   }
 

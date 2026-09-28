@@ -14,14 +14,13 @@ import Logs from '@/components/Tabs/Logs.vue'
 import Statistics from '@/components/Tabs/Statistics.vue'
 import { useConf, appearanceConf } from '@/composables/conf'
 import { useModel } from '@/composables/useModel'
-import { useStatistics } from '@/composables/useStatistics'
 
 import { useHelper, VITE_VERSION } from './composables/useHelper'
 
 const model = useModel()
-const { todayData } = useStatistics()
 const conf = useConf()
 const helper = useHelper()
+const { todayData } = helper.statistics
 
 const items = computed<TabsItem[]>(() => {
   const configs = [

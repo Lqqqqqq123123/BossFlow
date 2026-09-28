@@ -4,10 +4,10 @@ import { watch, watchEffect } from 'vue'
 
 import Alert from '@/components/Alert.vue'
 import { useConf, appearanceConf } from '@/composables/conf'
-import { useStatistics } from '@/composables/useStatistics'
+import { useHelper } from '@/composables/useHelper'
 
 const title = useTitle(undefined, { observe: true })
-const { todayData } = useStatistics()
+const { todayData } = useHelper().statistics
 const { formData } = useConf()
 
 watch(

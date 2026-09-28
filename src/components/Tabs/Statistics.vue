@@ -4,11 +4,10 @@ import { computed, onMounted, ref } from 'vue'
 import Alert from '@/components/Alert.vue'
 import { useConf } from '@/composables/conf'
 import { useHelper } from '@/composables/useHelper'
-import { useStatistics } from '@/composables/useStatistics'
 
 const ctx = useHelper()
 
-const statistics = useStatistics()
+const statistics = ctx.statistics
 
 // const { next, page } = usePager()
 const conf = useConf()
@@ -55,6 +54,11 @@ const deliveryLimit = computed(() => {
   return conf.formData.deliveryLimit.value
 })
 
+function percentage(value: number, total: number) {
+  if (total <= 0) return 0
+  return Number(((value / total) * 100).toFixed(1))
+}
+
 onMounted(() => {
   statistics.updateStatistics()
 })
@@ -79,11 +83,10 @@ onMounted(() => {
         <div class="text-sm text-gray-500">过滤比例：</div>
         <div class="text-2xl font-semibold">
           {{
-            (
-              ((statistics.todayData.total - statistics.todayData.success) /
-                statistics.todayData.total) *
-              deliveryLimit
-            ).toFixed(1)
+            percentage(
+              statistics.todayData.total - statistics.todayData.success,
+              statistics.todayData.total,
+            )
           }}
           <span class="text-sm text-gray-400">%</span>
         </div>
@@ -91,21 +94,14 @@ onMounted(() => {
       <div data-help="统计当天刷到了多少处理过的岗位,重复/总数">
         <div class="text-sm text-gray-500">重复比例：</div>
         <div class="text-2xl font-semibold">
-          {{
-            ((statistics.todayData.repeat / statistics.todayData.total) * deliveryLimit).toFixed(1)
-          }}
+          {{ percentage(statistics.todayData.repeat, statistics.todayData.total) }}
           <span class="text-sm text-gray-400">%</span>
         </div>
       </div>
       <div data-help="统计当天岗位中的活跃情况,不活跃/总数">
         <div class="text-sm text-gray-500">活跃比例：</div>
         <div class="text-2xl font-semibold">
-          {{
-            (
-              (statistics.todayData.activityFilter / statistics.todayData.total) *
-              deliveryLimit
-            ).toFixed(1)
-          }}
+          {{ percentage(statistics.todayData.activityFilter, statistics.todayData.total) }}
           <span class="text-sm text-gray-400">%</span>
         </div>
       </div>
@@ -163,7 +159,7 @@ onMounted(() => {
       <UProgress
         data-help="我会统计当天脚本投递的数量,该记录并不准确"
         class="flex-1"
-        :value="Number(((statistics.todayData.success / deliveryLimit) * 100).toFixed(1))"
+        :value="percentage(statistics.todayData.success, deliveryLimit)"
       />
     </div>
   </div>
