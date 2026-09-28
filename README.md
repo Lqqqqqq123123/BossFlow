@@ -1,8 +1,14 @@
 # BossFlow
 
-BossFlow 是一个面向求职流程的浏览器扩展，提供岗位筛选、自动投递、投递统计、AI 辅助和自定义招呼语等能力。
+BossFlow 帮你把 BOSS 直聘上的海投变成一个可控、可追踪的流程：从按条件圈定合适的岗位，到自动打招呼、实时看到每一个岗位的处理进度和投递结果，中途出错还能单独重试。它不替你做决定，而是把重复劳动接管掉，让你把时间花在准备面试上。
 
-本项目是 [Ocyss/boss-helper](https://github.com/Ocyss/boss-helper) 的非官方社区维护 Fork，与 BOSS 直聘官方无关。
+## 为什么有这个 Fork
+
+本项目源自 [Ocyss/boss-helper](https://github.com/Ocyss/boss-helper)，是非官方社区维护 Fork，与 BOSS 直聘官方无关。
+
+发起这个社区版本的原因很直接：上游项目近期维护节奏放缓，不少已知问题长时间没有得到处理。而我自己每天都在用这个插件投简历，等不起——所以我决定基于上游代码维护一个**持续跟进、及时修 bug** 的版本，修复的问题会直接更新到这里，我自己既是维护者也是第一个用户。
+
+如果你也遇到上游未解决的问题，欢迎来 [Issues](https://github.com/Lqqqqqq123123/BossFlow/issues) 反馈，实际使用中暴露的问题会被优先处理。
 
 ## 项目状态
 
@@ -24,12 +30,48 @@ BossFlow 是一个面向求职流程的浏览器扩展，提供岗位筛选、�
 - 展示岗位执行状态、任务时间线，并支持失败岗位重试。
 - 配置数据、API Key 等敏感信息默认保存在浏览器扩展本地存储中。
 
-## 安装与构建
+## 获取与安装
 
-需要 Node.js 22 或更高版本，以及 pnpm。
+### 为什么暂时没有插件商店版本
+
+由于近期处于快速迭代和优化阶段，功能与修复更新频繁，暂时没有上架 Chrome / Edge / Firefox 应用商店。上架前还需要完成独立的商店开发者身份配置，目前社区版统一通过 GitHub Release 和本地构建分发。
+
+商店版本上线后会在这里第一时间更新，敬请期待。
+
+### 本地构建并安装（当前推荐方式）
+
+从头构建只需四步：装 nvm → 装 Node → 克隆构建 → 导入浏览器。
+
+**1. 安装 nvm 并下载 Node.js**
+
+扩展构建需要 Node.js 22 或更高版本。推荐用 [nvm](https://github.com/nvm-sh/nvm) 管理 Node 版本（Windows 用户请使用 [nvm-windows](https://github.com/coreybutler/nvm-windows)）：
 
 ```powershell
+# 安装 nvm 后，安装并启用 Node 22
+nvm install 22
+nvm use 22
+
+# 确认版本
+node -v
+```
+
+**2. 克隆仓库并安装依赖**
+
+```powershell
+git clone https://github.com/Lqqqqqq123123/BossFlow.git
+cd BossFlow
+
+# 启用 pnpm（Node 22 自带 corepack）
+corepack enable
+corepack prepare pnpm@latest --activate
+
 pnpm install
+```
+
+**3. 构建扩展**
+
+```powershell
+# 一次构建 Chrome、Edge、Firefox 三端
 pnpm build
 ```
 
@@ -41,13 +83,20 @@ pnpm build
 .output/firefox-mv2
 ```
 
-开发和质量检查：
+**4. 在浏览器中加载扩展**
+
+- **Chrome / Edge**：打开扩展管理页（地址栏输入 `chrome://extensions` 或 `edge://extensions`）→ 开启右上角「开发者模式」→ 点击「加载已解压的扩展程序」→ 选择 `.output/chrome-mv3`（或 `.output/edge-mv3`）目录。
+- **Firefox**：打开 `about:debugging#/runtime/this-firefox` → 点击「临时载入附加组件」→ 选择 `.output/firefox-mv2` 目录中的任意文件（如 `manifest.json`）。注意 Firefox 的临时加载在浏览器重启后会失效，需要重新载入。
+
+加载完成后，打开 [BOSS 直聘](https://www.zhipin.com/) 的岗位列表页即可看到扩展界面，前往「配置」页设置筛选条件和招呼语后开始使用。
+
+### 开发与质量检查
 
 ```powershell
-pnpm dev
-pnpm check
-pnpm lint
-pnpm test
+pnpm dev      # 开发模式（热更新）
+pnpm check    # 类型检查
+pnpm lint     # 代码风格检查
+pnpm test     # 运行测试
 ```
 
 ## 使用说明
@@ -56,6 +105,20 @@ pnpm test
 2. 在“配置”页设置筛选条件、投递上限和招呼语，并保存配置。
 3. 回到“投递”页开始任务，观察岗位队列和执行状态。
 4. 导入配置后需要手动点击“保存配置”。配置文件可能包含隐私信息，请勿公开分享未经检查的文件。
+
+## 已知问题
+
+### 宽屏下面板与页面错位
+
+部分用户（尤其是较宽的显示器/窗口）会遇到 BossFlow 面板与下方 BOSS 页面内容没有对齐的情况。原因是插件的「内容偏移」配置中，默认值 `25` 是一个特殊值，表示完全关闭偏移补偿；此时在超宽视口下，插件插入的面板可能扰乱 BOSS 页面自身的布局，导致整体错位。
+
+**解决办法**：打开「配置」页 → 「外观配置」→ 「内容偏移」，把数值从默认的 `25` 稍微调开（例如 `24.5` 或 `24`），面板与页面会自动重新对齐。该设置会持久保存，只需调整一次。任何非 `25` 的值都会启用偏移补偿机制。
+
+我们会持续收集不同屏幕宽度下的页面结构信息，评估后续版本的彻底修复方案。如果你遇到调整后仍无法对齐的情况，欢迎提交 Issue 并附上屏幕分辨率与页面截图。
+
+### 岗位队列卡片横向“错位”
+
+「岗位队列」中的卡片条支持横向滚动：自动投递运行时，当前正在处理的岗位卡片会自动滚动居中，因此左侧可能露出半张被裁切的卡片，这是设计行为而非布局问题。将鼠标悬停在卡片条上滚动滚轮，可以手动横向浏览。
 
 ## 社区维护说明
 
