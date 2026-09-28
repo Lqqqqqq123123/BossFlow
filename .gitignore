@@ -36,3 +36,8 @@ logapi.zhipin.*.pem
 .wxt
 
 /temp
+
+# AI 助手本地配置
+.agents/
+.claude/skills/
+skills-lock.json
