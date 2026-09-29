@@ -3,8 +3,9 @@ import { renderTemplate } from '@/utils/ai'
 import { HelperContext } from '~/composables/useHelper'
 
 import { sameCompanyKey, sameHrKey } from '../../entrypoints/boss/requests'
+import { matchSalaryRange, rangeMatch, rangeMatchFormat } from '@/utils/salary'
 import { defineTaskHandler, JobStatus, TaskContext, TaskResult } from './type'
-import { parseFiltering, rangeMatch, rangeMatchFormat } from './utils'
+import { parseFiltering } from './utils'
 
 export class DependencyMissingError extends Error {
   constructor(public taskId: string) {
@@ -209,22 +210,15 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
     if (!ctx.helper.conf.formData.salaryRange.enable) {
       return
     }
-    const arr = [
-      ['元/时', ctx.helper.conf.formData.salaryRange.advancedValue.H],
-      ['元/天', ctx.helper.conf.formData.salaryRange.advancedValue.D],
-      ['元/月', ctx.helper.conf.formData.salaryRange.advancedValue.M],
-      ['K', ctx.helper.conf.formData.salaryRange.value],
-    ] as const
     return async (_ctx, { jobData: data }) => {
-      const text = data.salary
-      for (const key of arr) {
-        if (text.includes(key[0])) {
-          if (!rangeMatch(text, key[1])) {
-            return {
-              isSkip: true,
-              reason: `不匹配的薪资范围 ${text}, 预期: ${rangeMatchFormat(key[1], key[0])}`,
-            }
-          }
+      const { matched, expected } = matchSalaryRange(
+        data.salary,
+        ctx.helper.conf.formData.salaryRange,
+      )
+      if (!matched) {
+        return {
+          isSkip: true,
+          reason: `不匹配的薪资范围 ${data.salary}, 预期: ${expected}`,
         }
       }
     }

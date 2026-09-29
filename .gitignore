@@ -41,3 +41,4 @@ logapi.zhipin.*.pem
 .agents/
 .claude/skills/
 skills-lock.json
+.zcode/

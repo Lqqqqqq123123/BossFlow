@@ -130,6 +130,23 @@ const FROM_VERSION: [string, (from: Partial<FormData>) => Partial<FormData>][] =
       return from
     },
   ],
+  [
+    '20260929',
+    (from) => {
+      const advancedValue = from.salaryRange?.advancedValue
+      if (!advancedValue) {
+        return from
+      }
+      // 旧默认区间 [0,1] 会拒绝一切薪资，重置为放行的全区间；用户配置过的值不动
+      ;(['H', 'D', 'M'] as const).forEach((key) => {
+        const v = advancedValue[key]
+        if (v && v[0] === 0 && v[1] === 1 && v[2] === false) {
+          advancedValue[key] = [...defaultFormData.salaryRange.advancedValue[key]]
+        }
+      })
+      return from
+    },
+  ],
 ]
 
 export const useConf = () => {

@@ -35,23 +35,30 @@ function syncSalaryRange() {
 <template>
   <FormItem
     label="薪资范围"
-    data-help="投递工作的薪资范围, 更多选项可看高级配置"
+    data-help="投递工作的薪资范围, 实习岗位常按天计薪, 可配置元/天区间(默认不限制)"
     v-model:enable="conf.formData.salaryRange.enable"
     class="col-span-2 xl:col-span-1"
     ref="salaryRangeRef"
   >
-    <SalaryRangeComponent :value="conf.formData.salaryRange.value" unit="K" :show="false">
-      <UButton
-        v-if="conf.configLevel.advanced"
-        @click="
-          () => {
-            salaryRangeAdvanced = !salaryRangeAdvanced
-          }
-        "
-      >
-        高级
-      </UButton>
-    </SalaryRangeComponent>
+    <div class="flex flex-col gap-2">
+      <SalaryRangeComponent :value="conf.formData.salaryRange.value" unit="K" :show="false">
+        <UButton
+          v-if="conf.configLevel.advanced"
+          @click="
+            () => {
+              salaryRangeAdvanced = !salaryRangeAdvanced
+            }
+          "
+        >
+          高级
+        </UButton>
+      </SalaryRangeComponent>
+      <SalaryRangeComponent
+        :value="conf.formData.salaryRange.advancedValue.D"
+        unit="元/天"
+        :show="true"
+      />
+    </div>
     <UPopover
       :reference="salaryRangeRef"
       :open="salaryRangeAdvanced"
@@ -87,13 +94,6 @@ function syncSalaryRange() {
             unit="元/时"
             :show="true"
             :step="5"
-            :ui="{ base: 'max-w-20' }"
-          />
-          <SalaryRangeComponent
-            :value="conf.formData.salaryRange.advancedValue.D"
-            unit="元/天"
-            :show="true"
-            :step="10"
             :ui="{ base: 'max-w-20' }"
           />
           <SalaryRangeComponent

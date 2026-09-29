@@ -170,10 +170,10 @@ export const defaultFormData: FormData = {
   salaryRange: {
     value: [8, 13, false],
     advancedValue: {
-      // 默认全部关闭，避免用户未配置而投递错误岗位
-      H: [0, 1, false],
-      D: [0, 1, false],
-      M: [0, 1, false],
+      // 默认为全区间，未配置的单位不过滤；只有用户配置过的单位参与筛选
+      H: [0, 999999, false],
+      D: [0, 999999, false],
+      M: [0, 999999, false],
     },
     enable: false,
   },
@@ -313,5 +313,5 @@ export const defaultFormData: FormData = {
   delayDeliveryInterval: 5,
   delayDeliveryPageNext: 60,
   delayMessageSending: 5,
-  version: '20260718',
+  version: '20260929',
 }
