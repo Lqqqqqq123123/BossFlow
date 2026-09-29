@@ -69,6 +69,39 @@ pnpm test
 - pnpm 11 仅允许 `vue-demi` 执行依赖构建脚本；不得改成全局允许。
 - `vue-tsc` 当前使用 TypeScript 5.9 系列，升级 TypeScript 前必须先验证兼容性。
 
+## 发布流程（GitHub Release）
+
+- 版本号唯一来源是根目录 `package.json` 的 `version` 字段，`pnpm build` 时由 WXT 自动写入扩展 manifest。GitHub Release 的 tag（`vX.Y.Z`）、zip 文件名中的版本号与 package.json 三者无自动校验，发布前必须逐一核对一致。
+- 版本号遵循语义化版本：只修 bug 递增修定位（1.0.0 → 1.0.1），新增功能递增次定位（→ 1.1.0），破坏性变更递增主定位（→ 2.0.0）。可用 `npm version minor`（或 `patch`/`major`）一步完成改版本、提交与打 tag。
+- 发布顺序：先改 `package.json` 版本号 → 再 `pnpm build`（构建时才读取版本号写入 manifest）→ 再打包 → 最后创建 Release。改了版本号忘记重新构建是最常见的翻车点。
+
+发版步骤：
+
+1. 完成开发并通过验证基线（`pnpm test`、`pnpm check`、`pnpm lint`、`pnpm build` 三端）。
+2. 更新版本号、提交并推送代码；`vX.Y.Z` tag 应落在包含本次改动的提交上。
+3. 打包 zip（PowerShell，注意 `-Path .../*` 打的是目录内容，保证 `manifest.json` 位于 zip 根）：
+
+   ```powershell
+   powershell -NoProfile -Command "Compress-Archive -Path '.output/chrome-mv3/*' -DestinationPath '.output/BossFlow-<版本>-chrome-mv3.zip' -Force; Compress-Archive -Path '.output/edge-mv3/*' -DestinationPath '.output/BossFlow-<版本>-edge-mv3.zip' -Force; Compress-Archive -Path '.output/firefox-mv2/*' -DestinationPath '.output/BossFlow-<版本>-firefox-mv2.zip' -Force"
+   ```
+
+4. 更新 `.output/RELEASE_NOTES.md`（放在 `.output` 下不进仓库），内容含本版本修复/新增清单、安装方式，以及下方“发布注意事项”要求的声明。
+5. 创建 Release（本仓库为 Fork，存在 origin/upstream 双 remote，gh 需显式指定仓库）：
+
+   ```powershell
+   gh release create vX.Y.Z -R Lqqqqqq123123/BossFlow --title "BossFlow vX.Y.Z" --notes-file .output/RELEASE_NOTES.md .output/BossFlow-<版本>-chrome-mv3.zip .output/BossFlow-<版本>-edge-mv3.zip .output/BossFlow-<版本>-firefox-mv2.zip
+   ```
+
+   也可先执行一次 `gh repo set-default Lqqqqqq123123/BossFlow`，之后可省略 `-R`。
+
+发布注意事项：
+
+- Release 只应发布到 `origin`（BossFlow 社区仓库），不得发到 `upstream`。
+- Release 说明必须包含：源自 `Ocyss/boss-helper`、MIT License、非官方社区维护、与 BOSS 直聘官方无关（同“版权与许可”口径）。
+- 在待办 2（更换 Chrome 扩展 `key`、Firefox 扩展 ID）完成前，Release 说明中必须提醒：本扩展与上游 boss-helper 原版使用相同扩展身份，不可同时安装，后装者会覆盖先装者。
+- edge 产物不含 options 页面及其 chunk（WXT 配置有意排除），打包为 15 个文件属预期，不是构建缺陷。
+- Firefox 产物为 MV2 无签名扩展，仅能通过 `about:debugging` 临时载入，重启浏览器后失效；长期支持需完成扩展 ID 更换并走 AMO 签名分发。
+
 ## 当前维护待办
 
 1. 修复 GitHub Actions：移除不存在的 `build:noTsc`，将 `dist` 产物路径改为 WXT 的 `.output`，并建立可复现的包管理器/锁文件策略。
