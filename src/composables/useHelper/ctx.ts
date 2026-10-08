@@ -55,6 +55,7 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
           state_name: err?.name ?? '投递成功',
           message,
           data: logdata,
+          time: Date.now(),
         })
       },
       info: (title: string, message: string) => {
@@ -64,6 +65,7 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
           state_name: '消息',
           message,
           data: undefined,
+          time: Date.now(),
         })
       },
       clear: () => {

@@ -171,7 +171,16 @@ function onPointerMove(ev: PointerEvent) {
     }"
     ref="container"
   >
-    <UApp :portal="container" :toaster="{ position: 'top-right', ui: { viewport: 'z-100000' } }">
+    <!-- 保留 Shadow DOM 内的 portal，调整 viewport 而非单条 toast，保留通知堆叠。 -->
+    <UApp
+      :portal="container"
+      :toaster="{
+        position: 'top-right',
+        ui: {
+          viewport: 'top-20 z-[2147483647]',
+        },
+      }"
+    >
       <div class="overlay-box" :style="boxStyles" />
       <UTooltip
         :open="helpVisible"
@@ -299,7 +308,7 @@ function onPointerMove(ev: PointerEvent) {
             size="md"
             class="gap-0"
             :ui="{
-              list: 'items-center px-4 overflow-x-auto',
+              list: 'items-center px-4 overflow-x-auto border-b border-muted',
               trigger: 'min-w-fit',
               content: 'px-5 py-4',
             }"

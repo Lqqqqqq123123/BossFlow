@@ -121,6 +121,7 @@ export interface Log {
   state_name: string // 标签文本
   message?: string // 显示消息
   data?: LogData
+  time?: number // 记录时间戳
 }
 
 export type AlertItem = ExtendedAlertProps & {

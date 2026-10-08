@@ -1,114 +1,199 @@
 <script lang="tsx" setup>
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 import JobCard from '@/components/JobCard.vue'
-import { TableColumn } from '@nuxt/ui'
-import { useHelper,Log } from '@/composables/useHelper'
-const helper = useHelper()
+import type { TableColumn } from '@nuxt/ui'
+import { useHelper, Log } from '@/composables/useHelper'
+import { exportJson } from '@/utils/jsonImportExport'
 
-// const { filterData, dialogData } = useLog()
+const helper = useHelper()
+const toast = useToast()
 
 const dialogData = reactive<{ show: boolean; data?: Log }>({ show: false })
 
 const aiFilterActiveNames = ref('response')
 const aiGreetActiveNames = ref('response')
 
+const stateMeta: Record<Log['state'], { label: string; color: 'info' | 'success' | 'warning' | 'error' }> = {
+  info: { label: '信息', color: 'info' },
+  success: { label: '成功', color: 'success' },
+  warning: { label: '警告', color: 'warning' },
+  danger: { label: '错误', color: 'error' },
+}
+
+type LevelFilter = 'all' | Log['state']
+const activeLevel = ref<LevelFilter>('all')
+const keyword = ref('')
+
+const levelOptions = computed(() => [
+  { label: '全部', value: 'all' as const, count: helper.logs.value.length },
+  ...(Object.keys(stateMeta) as Log['state'][]).map((state) => ({
+    label: stateMeta[state].label,
+    value: state,
+    count: helper.logs.value.filter((log) => log.state === state).length,
+  })),
+])
+
+const filteredLogs = computed(() => {
+  let list = helper.logs.value
+  if (activeLevel.value !== 'all') {
+    list = list.filter((log) => log.state === activeLevel.value)
+  }
+  const kw = keyword.value.trim().toLowerCase()
+  if (kw) {
+    list = list.filter((log) =>
+      [log.title, log.message, log.state_name, log.job?.jobName, log.job?.brand?.name].some(
+        (text) => text?.toLowerCase().includes(kw),
+      ),
+    )
+  }
+  return [...list].reverse()
+})
+
+function formatTime(time?: number) {
+  if (!time) return '-'
+  const d = new Date(time)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+}
+
+function openDetail(log: Log) {
+  dialogData.show = true
+  dialogData.data = log
+}
+
+function clearLogs() {
+  helper.logs.clear()
+  toast.add({ title: '日志已清空', color: 'success' })
+}
+
+function exportLogs() {
+  if (!filteredLogs.value.length) {
+    toast.add({ title: '当前没有可导出的日志', color: 'warning' })
+    return
+  }
+  exportJson(
+    {
+      exportedAt: new Date().toISOString(),
+      count: filteredLogs.value.length,
+      logs: filteredLogs.value,
+    },
+    'BossFlow日志',
+  )
+  toast.add({ title: `已导出 ${filteredLogs.value.length} 条日志`, color: 'success' })
+}
+
 const columns: TableColumn<Log>[] = [
   {
-    accessorKey: 'level',
+    accessorKey: 'state',
     header: '级别',
-    // width: 200,
+    cell: ({ row }) => {
+      const meta = stateMeta[row.original.state] ?? stateMeta.info
+      return (
+        <UBadge color={meta.color} variant="subtle" size="sm">
+          {row.original.state_name || meta.label}
+        </UBadge>
+      )
+    },
+  },
+  {
+    accessorKey: 'title',
+    header: '岗位 / 事件',
     cell: ({ row }) => (
       <UButton
-        onClick={() => {
-          dialogData.show = true
-          dialogData.data = row.original
-        }}
+        color="neutral"
+        variant="link"
+        size="sm"
+        class="cursor-pointer"
+        onClick={() => openDetail(row.original)}
       >
-        {row.getValue('title')}
+        {row.original.title}
       </UButton>
     ),
   },
   {
-    accessorKey: 'state',
-    header: '内容',
-    // width: 150,
-    // align: 'center',
-    cell: ({ row }) => (
-      <UBadge color={row.getValue('state') ?? 'primary'}>{row.getValue('state_name')}</UBadge>
-    ),
-    // headerCellRenderer: (props: HeaderCellRendererParams<log>) => {
-    //   return (
-    //     <div class="flex items-center justify-center">
-    //       <span class="mr-2 text-xs">{props.column.title}</span>
-    //       <ElPopover trigger="click" {...{ width: 200 }}>
-    //         {{
-    //           default: () => (
-    //             <div class="filter-wrapper">
-    //               <ElCheckboxGroup v-model={filterStatus.value}>
-    //                 {stateNames.map((item) => (
-    //                   <ElCheckbox value={item[1]}>
-    //                     <ElTag type={item[0]}>{item[1]}</ElTag>
-    //                   </ElCheckbox>
-    //                 ))}
-    //               </ElCheckboxGroup>
-    //               <div class="el-table-v2__demo-filter">
-    //                 <ElButton
-    //                   text
-    //                   onClick={() => {
-    //                     filterStatus.value = stateNames
-    //                       .map((item) => item[1])
-    //                       .filter((status) => !filterStatus.value.includes(status))
-    //                   }}
-    //                 >
-    //                   反选
-    //                 </ElButton>
-    //               </div>
-    //             </div>
-    //           ),
-    //           reference: () => (
-    //             <ElIcon class="cursor-pointer">
-    //               <svg
-    //                 class="icon"
-    //                 viewBox="0 0 1024 1024"
-    //                 version="1.1"
-    //                 xmlns="http://www.w3.org/2000/svg"
-    //                 p-id="2612"
-    //                 width="200"
-    //                 height="200"
-    //               >
-    //                 <path
-    //                   d="M608.241895 960.010751c-17.717453 0-31.994625-14.277171-31.994625-31.994625l0-479.919368c0-7.912649 2.92424-15.653284 8.256677-21.501764l208.82513-234.455233L230.498908 192.139761l209.169158 234.627247c5.160423 5.84848 8.084663 13.417101 8.084663 21.32975l0 288.811692 50.916177 41.111372c13.761129 11.180917 15.825298 31.306568 4.816395 45.067697s-31.306568 15.825298-45.067697 4.816395L395.632454 776.815723c-7.568621-6.020494-11.868974-15.309256-11.868974-24.942046L383.763481 460.137746 135.203091 181.302873c-8.428691-9.460776-10.492861-22.877877-5.332437-34.402822 5.160423-11.524945 16.685369-18.921552 29.242399-18.921552l706.289938 0c12.729044 0 24.081975 7.396607 29.242399 19.093566 5.160423 11.524945 2.92424 25.11406-5.504452 34.402822L640.236519 460.30976l0 467.706367C640.236519 945.73358 625.959348 960.010751 608.241895 960.010751z"
-    //                   fill="#575B66"
-    //                   p-id="2613"
-    //                 ></path>
-    //               </svg>
-    //             </ElIcon>
-    //           ),
-    //         }}
-    //       </ElPopover>
-    //     </div>
-    //   )
-    // },
+    accessorKey: 'message',
+    header: '消息',
+    cell: ({ row }) => <span class="line-clamp-1 text-muted">{row.original.message || '-'}</span>,
   },
-  // {
-  //   accessorKey: 'message',
-  //   header: '信息',
-  //   // width: 360,
-  //   // minWidth: 360,
-  //   // align: 'left',
-  // },
+  {
+    accessorKey: 'time',
+    header: '时间',
+    cell: ({ row }) => <span class="text-muted tabular-nums">{formatTime(row.original.time)}</span>,
+  },
 ]
-
-// TODO: 自动滚动底部
-// watchEffect(() => {
-//   tableRef.value?.scrollToRow(data.value.length - 1);
-// });
 </script>
 
 <template>
-  <h1>维护当中...</h1>
-  <UTable ref="tableRef" :columns="columns" :data="helper.logs.value" :height="360" />
+  <div class="flex flex-col gap-3">
+    <div
+      class="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-muted bg-elevated/40 p-2 pl-3"
+    >
+      <div class="flex flex-wrap items-center gap-1">
+        <UButton
+          v-for="opt in levelOptions"
+          :key="opt.value"
+          size="xs"
+          :color="activeLevel === opt.value ? 'primary' : 'neutral'"
+          :variant="activeLevel === opt.value ? 'soft' : 'ghost'"
+          @click="activeLevel = opt.value"
+        >
+          {{ opt.label }}
+          <UBadge
+            :color="activeLevel === opt.value ? 'primary' : 'neutral'"
+            variant="subtle"
+            size="xs"
+            >{{ opt.count }}</UBadge
+          >
+        </UButton>
+      </div>
+      <div class="flex items-center gap-2">
+        <UInput
+          v-model="keyword"
+          icon="i-lucide-search"
+          placeholder="搜索岗位或消息"
+          size="xs"
+          class="w-44 sm:w-56"
+        />
+        <UButton
+          size="xs"
+          color="neutral"
+          variant="outline"
+          icon="i-lucide-download"
+          data-help="将当前筛选后的日志导出为 JSON 文件"
+          @click="exportLogs"
+        >
+          导出
+        </UButton>
+        <UButton
+          size="xs"
+          color="error"
+          variant="outline"
+          icon="i-lucide-trash-2"
+          data-help="清空本次运行产生的全部日志"
+          @click="clearLogs"
+        >
+          清空
+        </UButton>
+      </div>
+    </div>
+
+    <UTable v-if="filteredLogs.length" :columns="columns" :data="filteredLogs" :height="360" />
+    <div
+      v-else
+      class="flex h-60 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-muted text-muted"
+    >
+      <UIcon name="i-lucide-scroll-text" class="size-8 opacity-60" />
+      <p class="text-sm">
+        {{
+          helper.logs.value.length
+            ? '没有符合筛选条件的日志'
+            : '暂无日志，开始投递后这里会记录每个岗位的处理结果'
+        }}
+      </p>
+    </div>
+  </div>
+
   <UModal v-model:open="dialogData.show" title="日志详情">
     <template #body>
       <div class="log-detail">
@@ -174,17 +259,7 @@ const columns: TableColumn<Log>[] = [
   </UModal>
 </template>
 
-<style lang="scss">
-.ehp-table-v2__row-depth-0 {
-  height: 50px;
-}
-
-.ehp-table-v2__cell-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+<style lang="scss" scoped>
 .log-detail {
   display: flex;
   gap: 20px;
@@ -200,39 +275,10 @@ const columns: TableColumn<Log>[] = [
   }
 }
 
-.log-section {
-  padding: 16px;
-  background: #f5f7fa;
-  border-radius: 8px;
-  margin-bottom: 16px;
-
-  h4 {
-    margin: 0 0 12px;
-    color: #606266;
-  }
-}
-
-.ai-qa {
-  .ai-q {
-    color: #606266;
-    margin-bottom: 8px;
-  }
-  .ai-a {
-    color: #303133;
-    white-space: pre-wrap;
-  }
-}
-
 .ai-text {
   white-space: pre-wrap;
   user-select: text;
   padding: 8px;
   line-height: 1.5;
-}
-
-.ehp-collapse-item.active {
-  .ehp-collapse-item__header {
-    border-bottom-color: transparent;
-  }
 }
 </style>
