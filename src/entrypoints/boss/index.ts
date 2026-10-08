@@ -473,16 +473,8 @@ export class BossHelperCtx extends HelperContext<BossHelperCtx, BoosJobData, {}>
                     },
                   },
                   {
-                    type: 'inputNumber',
+                    type: 'deliveryInterval',
                     key: 'delayDeliveryInterval',
-                    fieldProps: {
-                      label: '投递间隔',
-                      'data-help': '每个投递的间隔,太快易风控,默认值2s',
-                    },
-                    inputNumberProps: {
-                      min: 1,
-                      max: 99999,
-                    },
                   },
                   {
                     type: 'inputNumber',

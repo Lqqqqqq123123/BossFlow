@@ -2,6 +2,7 @@ import { reactive, shallowRef, ref } from 'vue'
 
 import { PipelineCacheManager } from '@/composables/usePipelineCache'
 import type { PipelineCacheItem, ProcessorType } from '@/types/pipelineCache'
+import { getDeliveryInterval } from '@/utils/deliveryInterval'
 
 import { HelperContext } from '../useHelper'
 import { DependencyMissingError } from './handles'
@@ -360,7 +361,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
           helper.jobMaps.set(jobData.key, data)
           helper.currentJob.value = jobData.key
           await execute(data)
-          await delay(helper.conf.formData.delayDeliveryInterval, isStop)
+          await delay(getDeliveryInterval(helper.conf.formData), isStop)
         }
         if (isStop()) break
         const hasMore = await helper.loadMoreJob(

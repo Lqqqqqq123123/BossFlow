@@ -134,7 +134,14 @@ export type ConfigItem =
       type:
         | 'select'
         | 'checkbox'
-        | ('salaryRange' | 'companySizeRange' | 'customGreeting' | 'address' | 'appearance')
+        | (
+            | 'salaryRange'
+            | 'companySizeRange'
+            | 'customGreeting'
+            | 'address'
+            | 'appearance'
+            | 'deliveryInterval'
+          )
     }
   | AlertItem
   | {

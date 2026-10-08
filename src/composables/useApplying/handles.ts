@@ -1,9 +1,10 @@
 import { counter } from '@/message'
 import { renderTemplate } from '@/utils/ai'
+import { createJobContentKeywordPattern } from '@/utils/jobContentKeyword'
+import { matchSalaryRange, rangeMatch, rangeMatchFormat } from '@/utils/salary'
 import { HelperContext } from '~/composables/useHelper'
 
 import { sameCompanyKey, sameHrKey } from '../../entrypoints/boss/requests'
-import { matchSalaryRange, rangeMatch, rangeMatchFormat } from '@/utils/salary'
 import { defineTaskHandler, JobStatus, TaskContext, TaskResult } from './type'
 import { parseFiltering } from './utils'
 
@@ -247,7 +248,7 @@ export class TaskRegistry<C extends HelperContext<C, T, S>, T, S = {}> {
         if (!x) {
           continue
         }
-        const re = new RegExp(`(?<!(不|无).{0,5})${x.toLowerCase()}(?!系统|软件|工具|服务)`)
+        const re = createJobContentKeywordPattern(x)
         if (content != null && re.test(content)) {
           if (ctx.helper.conf.formData.jobContent.include) {
             return

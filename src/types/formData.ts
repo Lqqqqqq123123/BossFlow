@@ -48,6 +48,9 @@ export interface FormData {
   // animation?: "frame" | "card" | "together";
   delayDeliveryStarts: number
   delayDeliveryInterval: number
+  delayDeliveryIntervalMode: 'fixed' | 'random'
+  delayDeliveryIntervalMin: number
+  delayDeliveryIntervalMax: number
   delayDeliveryPageNext: number
   delayMessageSending: number
   version: string

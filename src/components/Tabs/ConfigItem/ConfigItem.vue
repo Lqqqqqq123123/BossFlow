@@ -6,6 +6,7 @@ import { type ConfigItem } from '@/composables/useHelper/type'
 import Address from './Address.vue'
 import Appearance from './Appearance.vue'
 import CustomGreeting from './CustomGreeting.vue'
+import DeliveryInterval from './DeliveryInterval.vue'
 import SalaryRangeComponent from './Form/SalaryRangeInput.vue'
 import SalaryRange from './SalaryRange.vue'
 
@@ -20,6 +21,7 @@ const conf = useConf()
 <template>
   <Alert v-if="item.type === 'alert'" v-bind="item" />
   <CustomGreeting v-else-if="item.type === 'customGreeting'" />
+  <DeliveryInterval v-else-if="item.type === 'deliveryInterval'" />
   <Address v-else-if="item.type === 'address'" />
   <Appearance v-else-if="item.type === 'appearance'" />
   <FormItem
