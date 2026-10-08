@@ -12,6 +12,8 @@ BossFlow 帮你把 BOSS 直聘上的海投变成一个可控、可追踪的流�
 
 ## 项目状态
 
+维护者发版操作见 [GitHub 发版流程](docs/RELEASING.md)。
+
 - 当前社区版本：`1.0.0`
 - 社区仓库：<https://github.com/Lqqqqqq123123/BossFlow>
 - 问题反馈：<https://github.com/Lqqqqqq123123/BossFlow/issues>

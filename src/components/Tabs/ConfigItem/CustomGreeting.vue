@@ -2,8 +2,10 @@
 import { formInfoData, useConf } from '@/composables/conf'
 import { useHelper } from '@/composables/useHelper'
 import { counter } from '@/message'
-import { CustomGreetingItem } from '@/types/formData'
+import type { CustomGreetingItem } from '@/types/formData'
+import { withTimeout } from '@/utils/withTimeout'
 
+const saveError = ref('')
 const conf = useConf()
 const helper = useHelper()
 const advancedGreetingValue = ref<CustomGreetingItem[]>([])
@@ -60,14 +62,23 @@ function advancedGreetingEnter(open: boolean) {
       JSON.stringify(conf.formData.customGreeting.value),
     ) as CustomGreetingItem[]
   }
+  saveError.value = ''
   advancedGreetingValue.value.forEach(async (item) => {
-    if (item.type === 'image' && item.image && !item.model) {
-      const response = await counter.getImage(item.image)
-      if (!response.success) {
-        throw new Error('图片未上传或已过期')
+    try {
+      if (item.type === 'image' && item.image && !item.model) {
+        const response = await withTimeout(
+          () => counter.getImage(item.image),
+          10000,
+          '图片加载超时，请刷新页面后重试',
+        )
+        if (!response.success) {
+          throw new Error('图片未上传或已过期')
+        }
+        const u8Array = new Uint8Array(response.buffer)
+        item.model = new File([u8Array.buffer], response.name, { type: response.type })
       }
-      const u8Array = new Uint8Array(response.buffer)
-      item.model = new File([u8Array.buffer], response.name, { type: response.type })
+    } catch (error) {
+      saveError.value = error instanceof Error ? error.message : String(error)
     }
   })
 }
@@ -75,6 +86,8 @@ function advancedGreetingEnter(open: boolean) {
 const advancedGreetinSaveLoading = ref(false)
 
 async function advancedGreetinSave(close: () => void) {
+  if (advancedGreetinSaveLoading.value) return
+  saveError.value = ''
   advancedGreetinSaveLoading.value = true
   try {
     for (const index in advancedGreetingValue.value) {
@@ -82,20 +95,34 @@ async function advancedGreetinSave(close: () => void) {
       if (item.type === 'image') {
         if (item.model instanceof File) {
           const file = item.model as File
-          const uploadedImage = await counter.setImage({
-            name: file.name,
-            type: file.type,
-            buffer: Array.from(new Uint8Array(await file.arrayBuffer())),
-          })
+          const buffer = Array.from(new Uint8Array(await file.arrayBuffer()))
+          const uploadedImage = await withTimeout(
+            () =>
+              counter.setImage({
+                name: file.name,
+                type: file.type,
+                buffer,
+              }),
+            10000,
+            '图片保存超时，请刷新页面后重试',
+          )
+          if (!uploadedImage.success || !uploadedImage.key) throw new Error('图片保存失败')
           item.image = uploadedImage.key
         }
-        advancedGreetingValue.value[index] = { ...item, model: undefined }
+        if (!item.image) throw new Error('请先选择要发送的图片')
       }
     }
     conf.formData.customGreeting.value = JSON.parse(
-      JSON.stringify(advancedGreetingValue.value),
+      JSON.stringify(
+        advancedGreetingValue.value.map((item) =>
+          item.type === 'image' ? { type: item.type, image: item.image } : item,
+        ),
+      ),
     ) as CustomGreetingItem[]
+    await conf.confSaving()
     close()
+  } catch (error) {
+    saveError.value = error instanceof Error ? error.message : String(error)
   } finally {
     advancedGreetinSaveLoading.value = false
   }
@@ -140,7 +167,7 @@ async function advancedGreetinSave(close: () => void) {
     />
     <UModal
       title="高级招呼语配置"
-      description="为了支持图片,附件等格式, 发送的时候将按顺序进行发送. 已知bug: 多条消息可能只有第一条能发送成功, 具体原因正在排查/修复中"
+      description="文本和图片按列表顺序发送；点击保存后会保存当前配置。"
       :ui="{ footer: 'justify-end', content: 'sm:max-w-[70%]' }"
       @update:open="advancedGreetingEnter"
       :dismissible="false"
@@ -150,6 +177,13 @@ async function advancedGreetinSave(close: () => void) {
       <UButton label="高级招呼语配置(支持图片)" color="neutral" variant="subtle" />
 
       <template #body>
+        <UAlert
+          v-if="saveError"
+          color="error"
+          title="招呼语配置保存或加载失败"
+          :description="saveError"
+          class="mb-3"
+        />
         <div class="flex flex-row gap-3 mb-3">
           <UButton color="primary" @click="addMessage('text')"> 添加文字消息 </UButton>
           <UButton color="primary" @click="addMessage('image')"> 添加图片消息 </UButton>
@@ -227,7 +261,7 @@ async function advancedGreetinSave(close: () => void) {
       <template #footer="{ close }">
         <UButton label="取消" color="neutral" variant="outline" @click="close" />
         <UButton
-          label="确定"
+          label="保存"
           color="neutral"
           @click="advancedGreetinSave(close)"
           :loading="advancedGreetinSaveLoading"
