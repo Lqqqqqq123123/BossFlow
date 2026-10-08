@@ -7,6 +7,7 @@ import type { ConfigLevel, FormData } from '@/types/formData'
 import deepmerge, { jsonClone } from '@/utils/deepmerge'
 import { exportJson, importJson } from '@/utils/jsonImportExport'
 import { logger } from '@/utils/logger'
+import { withTimeout } from '@/utils/withTimeout'
 
 import { defaultFormData } from './info'
 
@@ -201,20 +202,29 @@ export const useConf = () => {
   }
 
   async function confSaving() {
-    const v = jsonClone(formData)
     try {
-      await counter.storageSet(formDataKey(), v)
-      await counter.storageSet(formDataPresetKey, formDataPreset.value)
-      await counter.storageSet(formDataPresetsKey, formDataPresets.value)
+      const v = jsonClone(formData)
+      const preset = formDataPreset.value
+      const presets = jsonClone(formDataPresets.value)
+      const key = formDataKey()
+      await withTimeout(
+        async () => {
+          await counter.storageSet(key, v)
+          await counter.storageSet(formDataPresetKey, preset)
+          await counter.storageSet(formDataPresetsKey, presets)
+        },
+        10000,
+        '保存超时：扩展通信未响应，请刷新页面后重试（开发模式重载扩展后需要刷新页面）',
+      )
 
       logger.debug('formData保存', v)
       toast.add({
         title: '保存成功',
         color: 'success',
       })
-    } catch (error: any) {
+    } catch (error) {
       toast.add({
-        title: `保存失败: ${error.message}`,
+        title: `保存失败: ${error instanceof Error ? error.message : String(error)}`,
         color: 'error',
       })
       throw error
