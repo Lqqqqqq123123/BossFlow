@@ -1,7 +1,7 @@
 {
   "name": "bossflow",
   "displayName": "BossFlow",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "description": "非官方社区维护的求职筛选与投递效率工具",
   "type": "module",
