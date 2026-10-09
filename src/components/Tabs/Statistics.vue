@@ -12,6 +12,18 @@ const statistics = ctx.statistics
 // const { next, page } = usePager()
 const conf = useConf()
 const statisticCycle = ref(1)
+const sessionTimeout = ref<number | null>(null)
+const sessionTimeoutInput = ref<number | undefined>(undefined)
+const savingDefault = ref(false)
+async function saveDefaultTimeout() {
+  savingDefault.value = true
+  conf.formData.deliveryTimeoutMinutes = sessionTimeoutInput.value ?? defaultTimeout.value
+  try {
+    await conf.confSaving()
+  } finally {
+    savingDefault.value = false
+  }
+}
 
 const statisticCycleData = [
   {
@@ -56,6 +68,13 @@ const deliveryLimit = computed(() => {
 
 const isRunning = computed(() => ctx.workflow?.status.value === 'running')
 const isPaused = computed(() => ctx.workflow?.status.value === 'stop')
+const defaultTimeout = computed(() => Number(conf.formData.deliveryTimeoutMinutes) || 0)
+function startDelivery() {
+  const value = sessionTimeoutInput.value
+  sessionTimeout.value = value == null ? defaultTimeout.value : Math.max(0, value)
+  ctx.deliveryTimeoutOverride.value = sessionTimeout.value
+  void ctx.start()
+}
 const currentPageProgress = computed(() => {
   const total = ctx.workflow?.total.value ?? 0
   const current = ctx.workflow?.current.value ?? 0
@@ -102,13 +121,31 @@ onMounted(() => {
       </div>
 
       <UFieldGroup>
+        <UInputNumber
+          v-if="!isRunning"
+          v-model="sessionTimeoutInput"
+          :min="0"
+          :max="1440"
+          placeholder="时限(分钟)"
+          class="w-36"
+          data-help="本次投递时限，留空使用默认值，0 表示不限时"
+        />
+        <UButton
+          v-if="!isRunning"
+          icon="i-lucide-save"
+          color="neutral"
+          variant="outline"
+          :loading="savingDefault"
+          title="保存为默认时限"
+          @click="saveDefaultTimeout"
+        />
         <UButton
           v-if="!isRunning"
           color="primary"
           icon="i-lucide-play"
           :label="isPaused ? '继续投递' : '开始投递'"
           data-help="点击开始就会开始投递"
-          @click="ctx.start()"
+          @click="startDelivery"
         />
         <UButton
           v-if="isRunning"
@@ -129,6 +166,9 @@ onMounted(() => {
           @click="ctx.reset()"
         />
       </UFieldGroup>
+      <span class="w-full text-xs text-muted">
+        默认时限：{{ defaultTimeout > 0 ? `${defaultTimeout} 分钟` : '不限时' }}
+      </span>
     </section>
 
     <section

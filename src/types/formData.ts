@@ -53,6 +53,7 @@ export interface FormData {
   delayDeliveryIntervalMax: number
   delayDeliveryPageNext: number
   delayMessageSending: number
+  deliveryTimeoutMinutes: number
   version: string
 
   [key: string]: any

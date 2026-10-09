@@ -47,7 +47,7 @@ const saveButton = computed(() => {
     case 'saving':
       return { label: '保存中…', icon: undefined, loading: true, disabled: true }
     case 'success':
-      return { label: '已保存 ✓', icon: 'i-lucide-check', loading: false, disabled: false }
+      return { label: '已保存', icon: 'i-lucide-check', loading: false, disabled: false }
     case 'error':
       return { label: '保存失败', icon: 'i-lucide-circle-alert', loading: false, disabled: false }
     default:

@@ -148,6 +148,16 @@ const FROM_VERSION: [string, (from: Partial<FormData>) => Partial<FormData>][] =
       return from
     },
   ],
+  [
+    '20261009',
+    (from) => {
+      // 投递时限是新功能，旧配置没有用户明确设置过的值，默认不限时。
+      if (!Object.prototype.hasOwnProperty.call(from, 'deliveryTimeoutMinutes')) {
+        from.deliveryTimeoutMinutes = 0
+      }
+      return from
+    },
+  ],
 ]
 
 export const useConf = () => {

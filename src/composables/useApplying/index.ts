@@ -98,6 +98,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
   const current = ref(0)
   const total = computed(() => helper.jobList.value.length)
   const errorMessage = ref<string | null>(null)
+  const deliveryDeadline = ref(0)
   const pipeline = shallowRef<Task<C, T, S>[]>([])
   const nodes = shallowRef<
     Array<{
@@ -187,7 +188,7 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
 
   const executeTask = async (task: Task<C, T, S>, data: WorkflowData<T, S>) => {
     let res: TaskResult | void = undefined
-    const isStop = () => status.value === 'stop'
+    const isStop = () => status.value === 'stop' || (deliveryDeadline.value > 0 && Date.now() >= deliveryDeadline.value)
     const handler = resolvedHandlers.get(task.id)
     if (!handler || isStop()) return
 
@@ -323,7 +324,10 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
     let stepMsg = ''
     errorMessage.value = null
     status.value = 'running'
-    const isStop = () => status.value === 'stop'
+    const timeoutMinutes = Number(helper.deliveryTimeoutOverride.value ?? helper.conf.formData.deliveryTimeoutMinutes) || 0
+    helper.deliveryTimeoutOverride.value = null
+    deliveryDeadline.value = timeoutMinutes > 0 ? Date.now() + timeoutMinutes * 60_000 : 0
+    const isStop = () => status.value === 'stop' || (deliveryDeadline.value > 0 && Date.now() >= deliveryDeadline.value)
 
     try {
       while (status.value === 'running') {
@@ -348,9 +352,13 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
 
         for (const [index, jobData] of helper.jobList.value.entries()) {
           current.value = index + 1
-          if (isStop()) break
-          const status = helper.jobResultMaps.get(jobData.key)?.status
-          if (status === 'success' || status === 'warn') {
+          if (isStop()) {
+            status.value = 'stop'
+            stepMsg = deliveryDeadline.value ? '已达到本次投递时间上限，自动暂停' : stepMsg
+            break
+          }
+          const jobStatus = helper.jobResultMaps.get(jobData.key)?.status
+          if (jobStatus === 'success' || jobStatus === 'warn') {
             continue
           }
           const data = {
@@ -377,6 +385,11 @@ export async function useDeliveryWorkflow<C extends HelperContext<C, T, S>, T, S
       logger.error(e)
       stepMsg = `未知错误: ${e}`
     } finally {
+      if (deliveryDeadline.value > 0 && Date.now() >= deliveryDeadline.value) {
+        stepMsg = '已达到本次投递时间上限，自动暂停'
+        status.value = 'stop'
+      }
+      deliveryDeadline.value = 0
       if (!stepMsg) {
         stepMsg = '投递结束'
         status.value = 'pending'

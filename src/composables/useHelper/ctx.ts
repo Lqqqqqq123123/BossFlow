@@ -23,6 +23,7 @@ export abstract class HelperContext<C extends HelperContext<C, T, S>, T, S> {
 
   chatModel: ChatModel
   workflow: DeliveryWorkflow<C, T, S> | null = null
+  deliveryTimeoutOverride: { value: number | null } = { value: null }
   workflowRunning = computed(() => this.workflow?.status.value === 'running')
   jobResultMaps: Reactive<Map<string, TaskResult>>
 

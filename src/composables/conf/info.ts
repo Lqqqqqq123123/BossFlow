@@ -316,5 +316,6 @@ export const defaultFormData: FormData = {
   delayDeliveryIntervalMax: 10,
   delayDeliveryPageNext: 60,
   delayMessageSending: 5,
+  deliveryTimeoutMinutes: 0,
   version: '20260929',
 }
